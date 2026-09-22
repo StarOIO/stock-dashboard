@@ -97,30 +97,36 @@ svg text{fill:var(--muted);font-family:var(--f-num);font-size:11px}
     <button class="tab" role="tab" data-t="realized" aria-selected="false">已實現交易<span id="c-real"></span></button>
     <button class="tab" role="tab" data-t="cash" aria-selected="false">現金事件</button>
     <button class="tab" role="tab" data-t="skipped" aria-selected="false">資金不足未進場<span id="c-skip"></span></button>
+    <button class="tab" role="tab" data-t="newsskip" aria-selected="false">新聞過負面未進場<span id="c-newsskip"></span></button>
   </nav>
 
   <section id="p-open"></section>
   <section id="p-realized" hidden></section>
   <section id="p-cash" hidden></section>
   <section id="p-skipped" hidden></section>
+  <section id="p-newsskip" hidden></section>
 
   <p class="foot" id="foot"></p>
 </div>
 
 <script>
-const D = {"meta": {"stockDate": "2026-09-21", "generated": "2026-09-22 20:12", "totalCapital": 2000000, "capitalPerStock": 100000, "cash": 1400127, "nav": 1996499}, "ledger": [{"股票代碼": "2376", "股票名稱": "技嘉", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 368.0, "股數": 271, "投入金額": 99728, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 368.0, "賣出手續費": 142, "證交稅": 299, "淨損益": -583, "淨報酬(%)": -0.58}, {"股票代碼": "2436", "股票名稱": "偉詮電", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 70.0, "股數": 1428, "投入金額": 99960, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 70.0, "賣出手續費": 142, "證交稅": 300, "淨損益": -584, "淨報酬(%)": -0.58}, {"股票代碼": "3044", "股票名稱": "健鼎", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 524.0, "股數": 190, "投入金額": 99560, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 524.0, "賣出手續費": 142, "證交稅": 299, "淨損益": -583, "淨報酬(%)": -0.59}, {"股票代碼": "3312", "股票名稱": "弘憶股", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 54.7, "股數": 1828, "投入金額": 99992, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 54.7, "賣出手續費": 142, "證交稅": 300, "淨損益": -584, "淨報酬(%)": -0.58}, {"股票代碼": "3701", "股票名稱": "大眾控", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 42.7, "股數": 2341, "投入金額": 99961, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 42.7, "賣出手續費": 142, "證交稅": 300, "淨損益": -584, "淨報酬(%)": -0.58}, {"股票代碼": "6672", "股票名稱": "騰輝電子-KY", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 310.0, "股數": 322, "投入金額": 99820, "買進手續費": 142, "出場狀態": "持有中", "出場日期": null, "出場價": 310.0, "賣出手續費": 142, "證交稅": 299, "淨損益": -583, "淨報酬(%)": -0.58}], "events": [{"日期": "2026-09-21", "現金變化": -99870, "說明": "進場 2376 技嘉 271股", "事件後現金": 1900130}, {"日期": "2026-09-21", "現金變化": -100102, "說明": "進場 2436 偉詮電 1428股", "事件後現金": 1800028}, {"日期": "2026-09-21", "現金變化": -99702, "說明": "進場 3044 健鼎 190股", "事件後現金": 1700326}, {"日期": "2026-09-21", "現金變化": -100134, "說明": "進場 3312 弘憶股 1828股", "事件後現金": 1600192}, {"日期": "2026-09-21", "現金變化": -100103, "說明": "進場 3701 大眾控 2341股", "事件後現金": 1500090}, {"日期": "2026-09-21", "現金變化": -99962, "說明": "進場 6672 騰輝電子-KY 322股", "事件後現金": 1400128}]};
+const D = {"meta": {"stockDate": "2026-09-21", "generated": "2026-09-22 20:29", "totalCapital": 2000000, "capitalPerStock": 100000, "cash": 1219208, "nav": 1995440, "sentimentSkipThreshold": -2}, "ledger": [{"股票代碼": "2376", "股票名稱": "技嘉", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 368.0, "股數": 353, "投入金額": 129904, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 368.0, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.59, "新聞情緒分數": 4, "新聞情緒動作": "偏正面加碼"}, {"股票代碼": "2436", "股票名稱": "偉詮電", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 70.0, "股數": 1857, "投入金額": 129990, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 70.0, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.58, "新聞情緒分數": 4, "新聞情緒動作": "偏正面加碼"}, {"股票代碼": "3044", "股票名稱": "健鼎", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 524.0, "股數": 248, "投入金額": 129952, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 524.0, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.58, "新聞情緒分數": 3, "新聞情緒動作": "偏正面加碼"}, {"股票代碼": "3312", "股票名稱": "弘憶股", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 54.7, "股數": 2376, "投入金額": 129967, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 54.7, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.58, "新聞情緒分數": 3, "新聞情緒動作": "偏正面加碼"}, {"股票代碼": "3701", "股票名稱": "大眾控", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 42.7, "股數": 3044, "投入金額": 129979, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 42.7, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.58, "新聞情緒分數": 1, "新聞情緒動作": "偏正面加碼"}, {"股票代碼": "6672", "股票名稱": "騰輝電子-KY", "候選日期": "2026-09-21", "進場狀態": "已進場", "進場日期": "2026-09-21", "進場價": 310.0, "股數": 419, "投入金額": 129890, "買進手續費": 185, "出場狀態": "持有中", "出場日期": null, "出場價": 310.0, "賣出手續費": 185, "證交稅": 390, "淨損益": -760, "淨報酬(%)": -0.59, "新聞情緒分數": 3, "新聞情緒動作": "偏正面加碼"}], "events": [{"日期": "2026-09-21", "現金變化": -130089, "說明": "進場 2376 技嘉 353股 (偏正面加碼)", "事件後現金": 1869911}, {"日期": "2026-09-21", "現金變化": -130175, "說明": "進場 2436 偉詮電 1857股 (偏正面加碼)", "事件後現金": 1739736}, {"日期": "2026-09-21", "現金變化": -130137, "說明": "進場 3044 健鼎 248股 (偏正面加碼)", "事件後現金": 1609599}, {"日期": "2026-09-21", "現金變化": -130152, "說明": "進場 3312 弘憶股 2376股 (偏正面加碼)", "事件後現金": 1479447}, {"日期": "2026-09-21", "現金變化": -130164, "說明": "進場 3701 大眾控 3044股 (偏正面加碼)", "事件後現金": 1349283}, {"日期": "2026-09-21", "現金變化": -130075, "說明": "進場 6672 騰輝電子-KY 419股 (偏正面加碼)", "事件後現金": 1219208}]};
 const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt = (v, d=2) => v == null ? "–" : Number(v).toLocaleString("en-US", {minimumFractionDigits:d, maximumFractionDigits:d});
 const money = v => v == null ? "–" : (v > 0 ? "+" : "") + Math.round(v).toLocaleString("en-US");
 const sgn = v => v == null ? "" : (v > 0 ? "up" : v < 0 ? "down" : "");
 const pct = (v, d=2) => v == null ? "–" : (v > 0 ? "+" : "") + fmt(v, d) + "%";
+const sentTag = r => r["新聞情緒動作"] ? `<span class="tag ${r["新聞情緒動作"]==="偏正面加碼"?"st-hit":r["新聞情緒動作"]==="偏負面減碼"?"st-stop":""}">${esc(r["新聞情緒動作"])} (${r["新聞情緒分數"]})</span>` : "–";
 
 const L = D.ledger, E = D.events;
 const entered = L.filter(r => r["進場狀態"] === "已進場");
 const openPos = entered.filter(r => r["出場狀態"] === "持有中");
 const realized = entered.filter(r => r["出場狀態"] !== "持有中");
 const skipped = L.filter(r => r["進場狀態"] === "資金不足未進場");
+const newsSkipped = L.filter(r => r["進場狀態"] === "新聞過負面未進場");
+const boosted = entered.filter(r => r["新聞情緒動作"] === "偏正面加碼");
+const cutSized = entered.filter(r => r["新聞情緒動作"] === "偏負面減碼");
 const win = realized.filter(r => r["淨損益"] > 0).length;
 
 $("#stamp").innerHTML = `每筆投入 <b class="num">${D.meta.capitalPerStock.toLocaleString("en-US")}</b> 元 · 總資金 <b class="num">${D.meta.totalCapital.toLocaleString("en-US")}</b> 元 · 資料日期 <b class="num">${esc(D.meta.stockDate)}</b> · 頁面產生 <span class="num">${esc(D.meta.generated)}</span>`;
@@ -131,13 +137,16 @@ $("#strip").innerHTML = [
   ["淨值(NAV)", money(D.meta.nav) + " 元", pct((D.meta.nav / D.meta.totalCapital - 1) * 100)],
   ["已實現損益", money(realized.reduce((a,r)=>a+(r["淨損益"]||0),0)) + " 元", `${realized.length} 筆`],
   ["已實現勝率", realized.length ? fmt(win/realized.length*100,1)+"%" : "–", `${win}/${realized.length} 筆獲利`],
+  ["新聞情緒調整", `${boosted.length}加碼 / ${cutSized.length}減碼`, "免費關鍵字版，準確度有限"],
   ["資金不足未進場", skipped.length + " 筆", "累計"],
+  ["新聞過負面未進場", newsSkipped.length + " 筆", "累計"],
 ].map(([k,v,n]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");
-$("#c-open").textContent = " " + openPos.length; $("#c-real").textContent = " " + realized.length; $("#c-skip").textContent = " " + skipped.length;
+$("#c-open").textContent = " " + openPos.length; $("#c-real").textContent = " " + realized.length;
+$("#c-skip").textContent = " " + skipped.length; $("#c-newsskip").textContent = " " + newsSkipped.length;
 
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === b));
-  ["open","realized","cash","skipped"].forEach(t => $("#p-"+t).hidden = t !== b.dataset.t);
+  ["open","realized","cash","skipped","newsskip"].forEach(t => $("#p-"+t).hidden = t !== b.dataset.t);
 }));
 
 function table(cols, rows, scroll) {
@@ -155,6 +164,7 @@ $("#p-open").innerHTML = `<div class="box"><h2>持有中的部位</h2><p class="
     {h:"目前價", r:r=>`<span class="num">${fmt(r["出場價"])}</span>`},
     {h:"未實現損益", r:r=>`<span class="num ${sgn(r["淨損益"])}">${money(r["淨損益"])}</span>`},
     {h:"淨報酬", r:r=>`<span class="num ${sgn(r["淨報酬(%)"])}">${pct(r["淨報酬(%)"])}</span>`},
+    {h:"新聞情緒", l:1, r:sentTag},
   ], openPos.sort((a,b)=>(b["淨損益"]||0)-(a["淨損益"]||0)), true) + `</div>`;
 
 $("#p-realized").innerHTML = `<div class="box"><h2>已實現交易</h2><p class="sub">已扣手續費與證交稅的淨損益，結果固定不再變動。</p>` +
@@ -168,6 +178,7 @@ $("#p-realized").innerHTML = `<div class="box"><h2>已實現交易</h2><p class=
     {h:"狀態", l:1, r:r=>`<span class="tag ${r["出場狀態"]==="已達壓力"?"st-hit":"st-stop"}">${esc(r["出場狀態"])}</span>`},
     {h:"淨損益", r:r=>`<span class="num ${sgn(r["淨損益"])}">${money(r["淨損益"])}</span>`},
     {h:"淨報酬", r:r=>`<span class="num ${sgn(r["淨報酬(%)"])}">${pct(r["淨報酬(%)"])}</span>`},
+    {h:"新聞情緒", l:1, r:sentTag},
   ], realized.sort((a,b)=>(b["出場日期"]||"").localeCompare(a["出場日期"]||"")), true) + `</div>`;
 
 (function(){
@@ -195,7 +206,10 @@ $("#p-realized").innerHTML = `<div class="box"><h2>已實現交易</h2><p class=
 $("#p-skipped").innerHTML = `<div class="box"><h2>因資金不足未進場的候選</h2><p class="sub">這些訊號出現時現金不夠買一整筆，直接跳過、不會遞延到之後有錢了才補買。</p>` +
   (skipped.length ? `<div class="skipwrap">${skipped.map(r=>`<span class="skip">${esc(r["候選日期"])} ${esc(r["股票代碼"])} ${esc(r["股票名稱"])}</span>`).join("")}</div>` : `<p class="hint">目前沒有任何候選被跳過。</p>`) + `</div>`;
 
-$("#foot").innerHTML = `每筆候選預算 ${D.meta.capitalPerStock.toLocaleString("en-US")} 元，股數 = 預算 ÷ 進場價 (取整數股，不強制湊成一張1000股)，實際投入金額通常比預算略低；含買賣手續費0.1425%、賣出證交稅0.3%。同一檔股票已持有中不會重複買進。系統沒有保留每天的歷史股價，還在持有中的部位無法回推過去某一天的市值，因此只提供「現金水位」事件序列，不是完整的每日淨值曲線。資料來自 每日選股(多) 的「入選且條件≥3且成交量>800張」名單，僅供個人研究參考，非投資建議，不會自動更新 (這是產生當下的快照)。<br>回 <a href="/">選股儀表板</a>`;
+$("#p-newsskip").innerHTML = `<div class="box"><h2>因新聞過負面未進場的候選</h2><p class="sub">最近新聞的免費關鍵字情緒分數 ≤ ${esc(String(D.meta.sentimentSkipThreshold))} (負面關鍵字明顯多於正面)，即使有現金也不進場。</p>` +
+  (newsSkipped.length ? `<div class="skipwrap">${newsSkipped.map(r=>`<span class="skip">${esc(r["候選日期"])} ${esc(r["股票代碼"])} ${esc(r["股票名稱"])} (${r["新聞情緒分數"]})</span>`).join("")}</div>` : `<p class="hint">目前沒有任何候選因新聞過負面被跳過。</p>`) + `</div>`;
+
+$("#foot").innerHTML = `每筆候選預算 ${D.meta.capitalPerStock.toLocaleString("en-US")} 元，先依最近新聞的免費關鍵字情緒分數調整 (正面×1.3加碼、負面×0.7減碼、分數≤${esc(String(D.meta.sentimentSkipThreshold))}不進場)，再算股數 = 調整後預算 ÷ 進場價 (取整數股，不強制湊成一張1000股)，實際投入金額通常比預算略低；含買賣手續費0.1425%、賣出證交稅0.3%。新聞情緒只在候選第一次考慮進場那天查一次並鎖定，是關鍵字比對不是語意理解，準確度有限。同一檔股票已持有中不會重複買進。系統沒有保留每天的歷史股價，還在持有中的部位無法回推過去某一天的市值，因此只提供「現金水位」事件序列，不是完整的每日淨值曲線。資料來自 每日選股(多) 的「入選且條件≥3且成交量>800張」名單，僅供個人研究參考，非投資建議，不會自動更新 (這是產生當下的快照)。<br>回 <a href="/">選股儀表板</a>`;
 </script>
 
 </body>
