@@ -139,6 +139,16 @@ td.l .tags{justify-content:flex-start}
 .heat.h-hot{background:var(--up-bg);color:var(--up)}
 .heat.h-cold{background:var(--down-bg);color:var(--down)}
 .clegend{display:flex;flex-wrap:wrap;gap:6px 10px;margin:10px 0 14px;font-size:12px;color:var(--muted)}
+/* 說明收合起來：這些限制一定要寫清楚，但不該佔掉每天都要看的版面 */
+.capnote{margin:0 0 14px}
+.capnote>summary{cursor:pointer;font-size:12.5px;color:var(--muted);
+  padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);
+  display:inline-block;list-style:none}
+.capnote>summary::-webkit-details-marker{display:none}
+.capnote>summary::before{content:"▸ ";font-family:var(--f-num)}
+.capnote[open]>summary::before{content:"▾ "}
+.capnote[open]>summary{margin-bottom:8px}
+.capnote .hint{margin:0 0 8px}
 .crot{font-size:12.5px;margin:2px 0}
 .crot .num{font-family:var(--f-num)}
 
@@ -229,7 +239,17 @@ details.stk .news{padding:0 14px 8px}
   <section class="panel" id="p-track" hidden></section>
   <section class="panel" id="p-etf" hidden></section>
   <section class="panel" id="p-flow" hidden></section>
-  <section class="panel" id="p-cap" hidden></section>
+  <!-- 資金流向：共用的說明與圖例放在上面，概念族群／產業族群用小標題切換，
+       一次只顯示一邊，不要變成要捲很久的一長串。 -->
+  <section class="panel" id="p-cap" hidden>
+    <div id="cap-head"></div>
+    <nav class="subtabs" id="cap-subtabs" data-key="dash-capsub">
+      <button class="subtab" data-st="capcpt" aria-pressed="true">概念族群<span class="c" id="c-capcpt"></span></button>
+      <button class="subtab" data-st="capind" aria-pressed="false">產業族群<span class="c" id="c-capind"></span></button>
+    </nav>
+    <div id="p-capcpt"></div>
+    <div id="p-capind" hidden></div>
+  </section>
   <!-- 族群分析：概念族群與產業族群在同一頁，用兩個區塊分開。
        兩者回答的是同一個問題 (哪些族群在動)，只是口徑不同 —— 概念族群是自訂的
        跨產業小清單，產業族群是證交所官方分類。分成兩個最上層分頁會讓分頁列太長，
@@ -801,9 +821,17 @@ function sortable(el, cols, rows, opts) {
    再疊上成交熱度與融資借券，用來判斷「誰把股票交給誰」。
    這是**現況記錄，不是買賣訊號** —— 這條界線在頁面上也要寫清楚。 */
 (function(){
-  const P = $("#p-cap"), C = D.capitalFlow;
-  if (!C || !C.industry) { P.innerHTML = `<p class="hint">資金流向暫時無法取得，下次更新會再嘗試。</p>`; return; }
+  const C = D.capitalFlow;
+  // 沒資料時只改說明區、順便把小標題藏起來。不能寫 #p-cap.innerHTML ——
+  // 那會把小標題與兩個區塊的容器一起蓋掉。
+  if (!C || !C.industry) {
+    $("#cap-head").innerHTML = `<p class="hint">資金流向暫時無法取得，下次更新會再嘗試。</p>`;
+    $("#cap-subtabs").hidden = true;
+    return;
+  }
   $("#c-cap").textContent = C.industry.length;
+  $("#c-capcpt").textContent = (C.concept || []).length;
+  $("#c-capind").textContent = C.industry.length;
 
   const lots = v => v == null ? "–" : (v > 0 ? "+" : "") + Number(v).toLocaleString("en-US", {maximumFractionDigits:0});
   const plain = v => v == null ? "–" : Number(v).toLocaleString("en-US", {maximumFractionDigits:0});
@@ -887,7 +915,7 @@ function sortable(el, cols, rows, opts) {
        <p class="hint">集保官方 API <b>只提供最新一天的快照、拿不到歷史</b>，所以必須從建立這頁的那天開始
          每天存檔累積。原始資料是週更，大約 <b>2 週後</b>這一段才會出現數字。</p>`;
 
-  P.innerHTML = `<p class="hint">把四層資料疊在一起看今天<b>錢往哪裡跑</b>：
+  $("#cap-head").innerHTML = `<p class="hint">把四層資料疊在一起看今天<b>錢往哪裡跑</b>：
       ① <b>三大法人</b>投信／外資／自營分開算（誰在買比買多少重要）
       ② <b>成交熱度</b>這個族群吃掉全市場幾成成交金額，跟20日平均比是變熱還是變冷
       ③ <b>籌碼品質</b>融資（散戶槓桿）與借券賣出（法人空單）的增減
@@ -912,20 +940,21 @@ function sortable(el, cols, rows, opts) {
       <span class="vd v-bad">🔴 出貨給散戶</span>法人賣＋融資增，最危險
       <span class="vd v-mid">⚪ 同步減碼</span>法人賣＋融資減，整體退潮
     </div>
-    <p class="hint">⚠️ 判讀用的是<b>近5日</b>的法人與融資，但卡片是依<b>今日</b>淨額排序，
-      所以會看到「今日買超、判讀卻是減碼」—— 那代表今天剛轉買，但這 5 天整體還是賣的。
-      門檻是用 135 個交易日 × 35 個產業的實際分布校準的（融資減 ≤−2%、增 ≥+3%），
-      不是憑感覺設的。</p>
+    <details class="capnote"><summary>判讀細節與兩個資料限制</summary>
+      <p class="hint">⚠️ 判讀用的是<b>近5日</b>的法人與融資，但卡片是依<b>今日</b>淨額排序，
+        所以會看到「今日買超、判讀卻是減碼」—— 那代表今天剛轉買，但這 5 天整體還是賣的。
+        門檻是用 135 個交易日 × 35 個產業的實際分布校準的（融資減 ≤−2%、增 ≥+3%），
+        不是憑感覺設的。</p>
+      <p class="hint">①<b>借券賣出餘額的「水位」不能當看空指標</b> —— 它混了外資現股避險、
+        ETF 申贖套利、可轉債與權證 delta hedge，公開資料分不出比例，所以這裡只看變化量而且只當輔助。
+        ②成交金額是用<b>收盤價×成交量估算</b>的（證交所官方值只有上市、也沒有概念族群），
+        與官方數字有誤差，因為盤中均價不等於收盤價。</p>
+    </details>`;
 
-    <p class="hint"><b>兩個資料限制：</b>
-      ①<b>借券賣出餘額的「水位」不能當看空指標</b> —— 它混了外資現股避險、ETF 申贖套利、
-      可轉債與權證 delta hedge，公開資料分不出比例，所以這裡只看變化量而且只當輔助。
-      ②成交金額是用<b>收盤價×成交量估算</b>的（證交所官方值只有上市、也沒有概念族群），
-      與官方數字有誤差，因為盤中均價不等於收盤價。</p>
-
-    ${section("概念族群", C.concept, "族群", "自訂清單，跨產業的小族群")}
-    ${section("產業", C.industry, "產業", "證交所官方分類")}
-    ${tdccHtml}`;
+  $("#p-capcpt").innerHTML = section("概念族群", C.concept, "族群", "自訂清單，跨產業的小族群")
+    || `<p class="hint">今天沒有概念族群的資金流向資料。</p>`;
+  // 集保是依產業分組的，所以放在產業族群那一邊，不要兩邊重複
+  $("#p-capind").innerHTML = section("產業", C.industry, "產業", "證交所官方分類") + tdccHtml;
 })();
 
 /* ---------- 族群分析 ----------
