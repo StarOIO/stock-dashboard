@@ -400,9 +400,19 @@ function sortable(el, cols, rows, opts) {
 /* ---------- 選股清單 ---------- */
 (function(){
   const P = $("#p-picks");
-  const byDate = (D.picksByDate && Object.keys(D.picksByDate).length) ? D.picksByDate : {[D.meta.stockDate]: D.picks};
+  // 成交量低於這個張數的不列入清單 —— 太薄的量進出都會滑價，看了也不能用。
+  // 在資料層就濾掉，日期下拉的檔數、產業下拉、表格才會全部一致。
+  const MIN_VOL = 500;
+  const raw = (D.picksByDate && Object.keys(D.picksByDate).length) ? D.picksByDate : {[D.meta.stockDate]: D.picks};
+  const byDate = {};
+  // 量是空值的一併排除：不能確認它有沒有達標，就不要讓它混在「已達標」的清單裡
+  Object.keys(raw).forEach(d => {
+    byDate[d] = (raw[d] || []).filter(r => Number(r["今日成交量(張)"]) >= MIN_VOL);
+  });
   const dates = Object.keys(byDate).sort().reverse();
   const defaultDate = dates.includes(D.meta.stockDate) ? D.meta.stockDate : dates[0];
+  // 小標題上的檔數也要是過濾後的，否則標 32 檔但只列出 20 檔會對不起來
+  $("#c-picks").textContent = (byDate[defaultDate] || []).length;
 
   P.innerHTML = `<div class="tools">
     <select class="dateselect" id="pickDate" aria-label="選擇選股日期">
@@ -414,7 +424,8 @@ function sortable(el, cols, rows, opts) {
     <button class="chip" data-f="vol" aria-pressed="false">成交量&gt;800張</button>
     <button class="chip" data-f="hot" aria-pressed="false">熱門標示</button>
     <button class="chip" data-f="nochase" aria-pressed="false">排除追高警示</button></div>
-    <p class="hint">紅漲綠跌。條件細項是達標的技術指標；「追高」表示距近期高點很近或短線漲幅已大，僅供警示。新聞分頁只抓最新一天名單的新聞，切換日期不影響新聞內容。</p><div id="t1"></div>`;
+    <p class="hint">紅漲綠跌。條件細項是達標的技術指標；「追高」表示距近期高點很近或短線漲幅已大，僅供警示。新聞分頁只抓最新一天名單的新聞，切換日期不影響新聞內容。
+      <b>本清單已排除今日成交量低於 ${MIN_VOL} 張的個股</b>（量太薄進出會滑價），所以檔數會比選股程式原始輸出少。</p><div id="t1"></div>`;
   let f = "all";
   const cols = [
     {k:"n", h:"股票", l:1, first:1, v:r=>r["股票代碼"], r:r=>`<span class="cd num">${esc(r["股票代碼"])}</span><span class="nm">${esc(r["股票名稱"])}</span> <span class="cd">${esc(r["市場"]||"")}</span>`},
