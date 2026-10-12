@@ -145,6 +145,14 @@ td.l .tags{justify-content:flex-start}
 /* 族群分析 */
 .gsec{font-size:15px;margin:22px 0 10px}
 .gsub{font-weight:400;font-size:12px;color:var(--muted)}
+/* 同一頁裡兩個大區塊的標題：給一條上邊界和左側色條，讓「概念族群」和「產業族群」
+   一眼分得開，不會捲一捲就搞不清楚現在看的是哪一份。 */
+.gsec.gblock{display:flex;align-items:baseline;gap:8px;font-size:18px;
+  margin:34px 0 12px;padding:14px 0 10px 12px;border-top:1px solid var(--line);
+  border-left:4px solid var(--accent);background:linear-gradient(90deg,var(--soft),transparent 60%)}
+#p-cpt .gsec.gblock{margin-top:4px;border-top:0}
+.gsec.gblock .num{font-family:var(--f-num);font-size:14px;color:var(--muted)}
+.gsec.gblock .gsub{margin-left:auto;padding-right:4px}
 .gcard code{font-family:var(--f-num);font-size:11.5px;background:var(--soft);padding:1px 5px;border-radius:3px}
 .hint code{font-family:var(--f-num);font-size:11.5px;background:var(--soft);padding:1px 5px;border-radius:3px}
 .gcard{margin-bottom:12px}
@@ -206,8 +214,7 @@ details.stk .news{padding:0 14px 8px}
     <button class="tab" role="tab" data-t="etf" aria-selected="false">ETF<span class="c" id="c-etf"></span></button>
     <button class="tab" role="tab" data-t="flow" aria-selected="false">投信動向<span class="c" id="c-flow"></span></button>
     <button class="tab" role="tab" data-t="cap" aria-selected="false">💰 資金流向<span class="c" id="c-cap"></span></button>
-    <button class="tab" role="tab" data-t="cpt" aria-selected="false">概念族群<span class="c" id="c-cpt"></span></button>
-    <button class="tab" role="tab" data-t="grp" aria-selected="false">產業族群<span class="c" id="c-grp"></span></button>
+    <button class="tab" role="tab" data-t="grp" aria-selected="false">族群分析<span class="c" id="c-grp"></span></button>
     <button class="tab" role="tab" data-t="why" aria-selected="false">漲跌線索<span class="c" id="c-why"></span></button>
     <button class="tab" role="tab" data-t="news" aria-selected="false">大盤新聞</button>
     <button class="tab" role="tab" data-t="stocknews" aria-selected="false">選股新聞<span class="c" id="c-stocknews"></span></button>
@@ -231,8 +238,14 @@ details.stk .news{padding:0 14px 8px}
   <section class="panel" id="p-etf" hidden></section>
   <section class="panel" id="p-flow" hidden></section>
   <section class="panel" id="p-cap" hidden></section>
-  <section class="panel" id="p-cpt" hidden></section>
-  <section class="panel" id="p-grp" hidden></section>
+  <!-- 族群分析：概念族群與產業族群在同一頁，用兩個區塊分開。
+       兩者回答的是同一個問題 (哪些族群在動)，只是口徑不同 —— 概念族群是自訂的
+       跨產業小清單，產業族群是證交所官方分類。分成兩個最上層分頁會讓分頁列太長，
+       也看不出彼此的關係。 -->
+  <section class="panel" id="p-grp" hidden>
+    <div id="p-cpt"></div>
+    <div id="p-ind"></div>
+  </section>
   <section class="panel" id="p-why" hidden></section>
   <section class="panel" id="p-news" hidden></section>
   <section class="panel" id="p-stocknews" hidden></section>
@@ -272,7 +285,7 @@ $("#c-picks").textContent = D.picks.length; $("#c-track").textContent = T.length
 /* ---------- 頁籤 ---------- */
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === b));
-  ["sel","track","etf","flow","cap","cpt","grp","why","news","stocknews"].forEach(t => $("#p-"+t).hidden = t !== b.dataset.t);
+  ["sel","track","etf","flow","cap","grp","why","news","stocknews"].forEach(t => $("#p-"+t).hidden = t !== b.dataset.t);
   try { localStorage.setItem("dash-tab", b.dataset.t); } catch(e) {}
 }));
 
@@ -909,15 +922,16 @@ function sortable(el, cols, rows, opts) {
 })();
 
 /* ---------- 族群分析 ----------
-   拆成兩個分頁：「概念族群」(自訂小族群) 與「產業族群」(官方分類)。
-   原本擠在同一頁要捲很久，而且兩者的用途不同 —— 概念族群是找正在發動的題材，
-   產業族群是看大盤的輪動結構。 */
+   同一頁、兩個區塊：「概念族群」(自訂小族群) 與「產業族群」(官方分類)。
+   兩者的用途不同 —— 概念族群是找正在發動的題材，產業族群是看大盤的輪動結構，
+   但回答的是同一個問題，放在一起才看得出彼此的關係。
+   寫入的目標是區塊容器 #p-cpt / #p-ind，不是分頁本身 #p-grp
+   (寫 #p-grp 會把兩個區塊的容器一起蓋掉)。 */
 (function(){
   const G = D.groups;
   const noData = `<p class="hint">族群分析暫時無法取得，下次更新會再嘗試。</p>`;
-  if (!G || !G.strong) { $("#p-cpt").innerHTML = noData; $("#p-grp").innerHTML = noData; return; }
-  $("#c-grp").textContent = (G.all || []).length;
-  $("#c-cpt").textContent = (G.concepts || []).length;
+  if (!G || !G.strong) { $("#p-cpt").innerHTML = noData; $("#p-ind").innerHTML = ""; return; }
+  $("#c-grp").textContent = (G.concepts || []).length + (G.all || []).length;
 
   const disclaimer = `<b>這是「題材比對」，不是「因果判定」。</b>做法是把成分股近3天的新聞標題聚合起來，
       比對一份財經題材詞表；一個題材至少要被 <b>2 檔不同的成分股</b>的新聞提到才會列出，避免單篇大盤新聞造成誤判。
@@ -965,9 +979,12 @@ function sortable(el, cols, rows, opts) {
     </div>`;
   };
 
-  /* --- 分頁一：概念族群 (自訂清單，找正在發動的題材) --- */
+  /* --- 區塊一：概念族群 (自訂清單，找正在發動的題材) --- */
   const concepts = G.concepts || [];
+  const secHead = (t, n, sub) => `<h2 class="gsec gblock">${t}
+    <span class="num">${n}</span><span class="gsub">${sub}</span></h2>`;
   $("#p-cpt").innerHTML = concepts.length ? `
+    ${secHead("概念族群", concepts.length, "自訂清單，跨產業的小族群")}
     <p class="hint">官方產業分類太粗，抓不到真正在一起動的小族群：ABF載板的欣興、南電被歸在「電子零組件業」(104檔)，
       景碩卻在「半導體業」—— 三檔切在兩個產業、各佔不到 3%，就算全部大漲，在產業統計裡也看不出來。
       這一頁是用自訂的成分股清單算的，要增刪族群改 <code>json\\概念族群.json</code> 就好，隔天生效。
@@ -977,7 +994,8 @@ function sortable(el, cols, rows, opts) {
       <button class="chip" data-cf="all" aria-pressed="true">全部 <span class="num">${concepts.length}</span></button>
       <button class="chip" data-cf="up" aria-pressed="false">只看走強 <span class="num">${concepts.filter(c=>c["中位數漲幅(%)"]>0).length}</span></button>
       <button class="chip" data-cf="theme" aria-pressed="false">有題材 <span class="num">${concepts.filter(c=>(c.themes||[]).length).length}</span></button></div>
-    <div id="cpt-list"></div>` : `<p class="hint">還沒有設定概念族群。編輯 <code>json\\概念族群.json</code> 就會出現在這裡。</p>`;
+    <div id="cpt-list"></div>` : `${secHead("概念族群", 0, "自訂清單，跨產業的小族群")}
+    <p class="hint">還沒有設定概念族群。編輯 <code>json\\概念族群.json</code> 就會出現在這裡。</p>`;
 
   if (concepts.length) {
     let cf = "all";
@@ -996,10 +1014,12 @@ function sortable(el, cols, rows, opts) {
     drawC();
   }
 
-  /* --- 分頁二：產業族群 (官方分類，看大盤輪動結構) --- */
-  $("#p-grp").innerHTML = `
+  /* --- 區塊二：產業族群 (官方分類，看大盤輪動結構) --- */
+  $("#p-ind").innerHTML = `
+    ${secHead("產業族群", (G.all || []).length, "證交所官方分類")}
     <p class="hint">依證交所官方產業分類統計。<b>「型態」欄位可以看出是全族群齊漲還是少數幾檔拉抬</b> ——
-      少數帶動代表題材還在發酵初期、也代表風險集中在那幾檔。想看跨產業的小族群 (例如 ABF載板、矽光子) 請切到「概念族群」分頁。
+      少數帶動代表題材還在發酵初期、也代表風險集中在那幾檔。想看跨產業的小族群 (例如 ABF載板、矽光子)
+      請看上面的「概念族群」區塊。
       資料日 ${esc(G.date)}，全市場個股漲跌幅中位數 ${pct(G.marketMedian)}。</p>
     <p class="hint">${disclaimer}</p>
     <h2 class="gsec">走強的產業</h2>
