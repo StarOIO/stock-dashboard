@@ -276,6 +276,18 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const fmt = (v, d=2) => v == null ? "–" : Number(v).toLocaleString("en-US", {minimumFractionDigits:d, maximumFractionDigits:d});
 const sgn = v => v == null ? "" : (v > 0 ? "up" : v < 0 ? "down" : "");
 const pct = (v, d=2) => v == null ? "–" : (v > 0 ? "+" : "") + fmt(v, d) + "%";
+/* 熱門標示在「非熱門股」時的值是字串 "-"，不是空值。JS 把 "-" 當成真值，會有兩個後果：
+   ① 卡片上渲染出一個只有破折號的空標籤 (看起來像字不見了)
+   ② 「只看熱門標示」的篩選鈕等於完全沒篩，因為每一列都通過
+   所以一律用這個函式取值，不要直接判斷欄位真假。 */
+const hotOf = r => { const v = r["熱門標示"]; return (v && v !== "-" && v !== "–") ? String(v) : ""; };
+/* 近期壓力價是 null 時不一定是缺資料：程式在「股價已站上60日高點」時刻意不給數字
+   (見 每日選股(多).py v18→v19)。那種情況顯示「創高無壓」比顯示一個破折號清楚。 */
+const resText = r => {
+  if (r["近期壓力價"] != null) return fmt(r["近期壓力價"]);
+  const nh = r["距60日高點(%)"];
+  return (nh != null && nh >= -0.5) ? "創高無壓" : "–";
+};
 const safeUrl = u => /^https?:\/\//.test(u) ? u : "#";
 const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
 
@@ -437,15 +449,15 @@ function sortable(el, cols, rows, opts) {
     {k:"ratio", h:"量比", v:r=>r["量比(今日/5日均)"], r:r=>`<span class="num">${fmt(r["量比(今日/5日均)"])}</span>`},
     {k:"vol", h:"成交量(張)", v:r=>r["今日成交量(張)"], r:r=>`<span class="num">${fmt(r["今日成交量(張)"],0)}</span>`},
     {k:"sup", h:"支撐", v:r=>r["近期支撐價"], r:r=>`<span class="num">${fmt(r["近期支撐價"])}</span>`},
-    {k:"res", h:"壓力", v:r=>r["近期壓力價"], r:r=>`<span class="num">${fmt(r["近期壓力價"])}</span>`},
+    {k:"res", h:"壓力", v:r=>r["近期壓力價"], r:r=>`<span class="num">${resText(r)}</span>`},
     {k:"mom", h:`營收MoM ${momLabel(latestMom)}`, v:r=>r[latestMom], r:r=>`<span class="num ${sgn(r[latestMom])}">${pct(r[latestMom],1)}</span>`},
-    {k:"flag", h:"標示", l:1, first:1, v:r=>(r["熱門標示"]?1:0)+(r["追高警示"]?1:0), r:r=>`<div class="tags">${r["熱門標示"]?`<span class="tag hot">${esc(r["熱門標示"])}</span>`:""}${r["追高警示"]?`<span class="tag warn">追高</span>`:""}${r["警示標記"]?`<span class="tag warn">${esc(r["警示標記"])}</span>`:""}</div>`},
+    {k:"flag", h:"標示", l:1, first:1, v:r=>(hotOf(r)?1:0)+(r["追高警示"]?1:0), r:r=>`<div class="tags">${hotOf(r)?`<span class="tag hot">${esc(hotOf(r))}</span>`:""}${r["追高警示"]?`<span class="tag warn">追高</span>`:""}${r["警示標記"]?`<span class="tag warn">${esc(r["警示標記"])}</span>`:""}</div>`},
   ];
   const rows = () => {
     const q = $("#q1").value.trim().toLowerCase();
     const list = byDate[$("#pickDate").value] || [];
     return list.filter(r =>
-      (f==="all" || (f==="vol" && r["成交量>800"]) || (f==="hot" && r["熱門標示"]) || (f==="nochase" && !r["追高警示"])) &&
+      (f==="all" || (f==="vol" && r["成交量>800"]) || (f==="hot" && hotOf(r)) || (f==="nochase" && !r["追高警示"])) &&
       indOk($("#pickInd"), r) &&
       (!q || [r["股票代碼"], r["股票名稱"], r["產業別"]].join(" ").toLowerCase().includes(q)));
   };
@@ -496,7 +508,7 @@ function sortable(el, cols, rows, opts) {
 
   const line = r => {
     const tags = [];
-    if (r["熱門標示"]) tags.push(`<span class="tag hot">${esc(r["熱門標示"])}</span>`);
+    if (hotOf(r)) tags.push(`<span class="tag hot">${esc(hotOf(r))}</span>`);
     if (r["產業族群發動"]) tags.push(`<span class="tag">族群發動</span>`);
     if (r["追高警示"]) tags.push(`<span class="tag warn">追高</span>`);
     if (r["警示標記"]) tags.push(`<span class="tag warn">${esc(r["警示標記"])}</span>`);
@@ -507,7 +519,7 @@ function sortable(el, cols, rows, opts) {
         <div class="ttl"><b>${esc(r["股票名稱"])}</b><span class="cd num">${esc(r["股票代碼"])}</span>
           <span class="ind">${esc(r["產業別"]||"–")}${r["市場"]?" · "+esc(r["市場"]):""}</span>
           <span class="px num">${fmt(r["收盤價"])}</span><span class="num ${sgn(r["漲跌幅(%)"])}">${pct(r["漲跌幅(%)"])}</span></div>
-        <div class="kv"><span>支撐 <b>${fmt(r["近期支撐價"])}</b></span><span>壓力 <b>${fmt(r["近期壓力價"])}</b></span>
+        <div class="kv"><span>支撐 <b>${fmt(r["近期支撐價"])}</b></span><span>壓力 <b>${resText(r)}</b></span>
           <span>量比 <b>${fmt(r["量比(今日/5日均)"])}</b></span><span>成交量 <b>${fmt(r["今日成交量(張)"],0)}</b> 張</span>
           <span>距60日高點 <b>${pct(r["距60日高點(%)"],1)}</b></span>
           ${inst==null?"":`<span>主力近3日 <b class="${sgn(inst)}">${inst>0?"買超":"賣超"} ${fmt(Math.abs(inst)/1000,0)}</b> 張</span>`}
