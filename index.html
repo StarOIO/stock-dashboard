@@ -12,7 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f2f4f7; --surface:#ffffff; --ink:#152033; --muted:#5a667a; --line:#dde2ea; --soft:#eaeef4;
+  /* 底色用帶一點藍灰的淺色，不是純白 —— 純白長時間看會刺眼，
+     卡片才用白色，靠對比把內容推出來。 */
+  --bg:#edf0f5; --surface:#ffffff; --ink:#152033; --muted:#5a667a; --line:#dde2ea; --soft:#eaeef4;
   --accent:#2c3e78; --accent-ink:#ffffff;
   --up:#c62b3d; --up-bg:#fbe9eb; --down:#12805c; --down-bg:#e4f4ee; --warn:#a86a00; --warn-bg:#fbf0d9;
   --tabshadow:rgba(0,0,0,.14);
@@ -20,14 +22,9 @@
   --f-disp:"Noto Serif TC","PMingLiU",serif;
   --f-num:"IBM Plex Mono",ui-monospace,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#0e131b; --surface:#161d28; --ink:#e5eaf2; --muted:#93a0b5; --line:#263041; --soft:#1e2735;
-    --accent:#9db0ff; --accent-ink:#0e131b;
-    --up:#ff6f7d; --up-bg:#3a1c22; --down:#3ccf95; --down-bg:#123328; --warn:#f0b64a; --warn-bg:#382a10;
-    --tabshadow:rgba(0,0,0,.5);
-  }
-}
+/* 刻意「不」跟著系統偏好自動切深色。使用者要的是固定的淺色底，
+   而他的瀏覽器是深色模式，原本的 prefers-color-scheme 會一直把頁面變暗。
+   深色配色保留在下面的 [data-theme="dark"]，要用時在 <html> 加屬性就會生效。 */
 :root[data-theme="dark"]{
   --bg:#0e131b; --surface:#161d28; --ink:#e5eaf2; --muted:#93a0b5; --line:#263041; --soft:#1e2735;
   --accent:#9db0ff; --accent-ink:#0e131b;
@@ -119,6 +116,21 @@ td.l .tags{justify-content:flex-start}
 .frow .spark{flex:0 0 auto}
 .fdetail{font-size:12.5px;color:var(--muted);min-width:0}
 .fdetail .fsell{margin-top:2px}
+
+/* 排序依據的四個層級各給一個顏色，卡片上對應的標籤用同一組色，
+   這樣掃一眼就知道某一檔是靠哪一層排上來的。
+   刻意避開紅(漲)綠(跌)，免得跟漲跌幅的顏色混淆。 */
+.rk1{--c:#b4530a;--cb:#fdeee0} /* 熱門股   */
+.rk2{--c:#6d28d9;--cb:#f0ebfd} /* 族群發動 */
+.rk3{--c:#0e7490;--cb:#e0f2f7} /* 條件數   */
+.rk4{--c:#a21a5e;--cb:#fce7f1} /* 主力買超 */
+.tag.rk1,.tag.rk2,.tag.rk3,.tag.rk4{background:var(--cb);color:var(--c)}
+.rkkey{display:inline-flex;align-items:baseline;gap:4px;padding:1px 8px;border-radius:999px;
+  background:var(--cb);color:var(--c);font-size:12px;font-weight:500;white-space:nowrap}
+.rkkey .n{font-family:var(--f-num);opacity:.7}
+.rkbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 2px;font-size:12.5px}
+.rkbar .arw{color:var(--muted)}
+.kv .mk{color:var(--c);font-weight:500}
 
 /* 本週表現：統計卡片 */
 .wkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
@@ -517,8 +529,9 @@ function sortable(el, cols, rows, opts) {
 
   const line = r => {
     const tags = [];
-    if (hotOf(r)) tags.push(`<span class="tag hot">${esc(hotOf(r))}</span>`);
-    if (r["產業族群發動"]) tags.push(`<span class="tag">族群發動</span>`);
+    // 標籤的顏色跟上面「排序依據」的四個層級一一對應
+    if (hotOf(r)) tags.push(`<span class="tag rk1">${esc(hotOf(r))}</span>`);
+    if (r["產業族群發動"]) tags.push(`<span class="tag rk2">族群發動</span>`);
     if (r["追高警示"]) tags.push(`<span class="tag warn">追高</span>`);
     if (r["警示標記"]) tags.push(`<span class="tag warn">${esc(r["警示標記"])}</span>`);
     const inst = r["主力近3日合計買超股數"];
@@ -531,10 +544,10 @@ function sortable(el, cols, rows, opts) {
         <div class="kv"><span>支撐 <b>${fmt(r["近期支撐價"])}</b></span><span>壓力 <b>${resText(r)}</b></span>
           <span>量比 <b>${fmt(r["量比(今日/5日均)"])}</b></span><span>成交量 <b>${fmt(r["今日成交量(張)"],0)}</b> 張</span>
           <span>距60日高點 <b>${pct(r["距60日高點(%)"],1)}</b></span>
-          ${inst==null?"":`<span>主力近3日 <b class="${sgn(inst)}">${inst>0?"買超":"賣超"} ${fmt(Math.abs(inst)/1000,0)}</b> 張</span>`}
+          ${inst==null?"":`<span class="rk4"><span class="mk">主力近3日</span> <b class="${sgn(inst)}">${inst>0?"買超":"賣超"} ${fmt(Math.abs(inst)/1000,0)}</b> 張</span>`}
           ${momCells(r)}</div>
         ${tags.length?`<div class="tags">${tags.join("")}</div>`:""}
-        <div class="tags">${String(r["符合條件細項"]||"").split(", ").filter(Boolean).map(s=>`<span class="tag">${esc(s)}</span>`).join("")}</div>
+        <div class="tags">${String(r["符合條件細項"]||"").split(", ").filter(Boolean).map(s=>`<span class="tag rk3">${esc(s)}</span>`).join("")}</div>
       </div></article>`;
   };
 
@@ -545,9 +558,15 @@ function sortable(el, cols, rows, opts) {
     const q = $("#q6").value.trim().toLowerCase();
     const list = (day.rows||[]).filter(r => indOk($("#topInd"), r) &&
       (!q || [r["股票代碼"],r["股票名稱"],r["產業別"]].join(" ").toLowerCase().includes(q)));
-    $("#top-hint").innerHTML = `${esc(d)} 收盤，入選 ${day.total} 檔中排序最前面的 ${(day.rows||[]).length} 檔，`
-      + `跟 Discord 每日選股報告的「🏆 精選前${N}檔」是同一份、同一個順序。`
-      + `排序依據：熱門股 → 產業族群發動 → 符合條件數 → 主力近3日買超。名次只代表排序，不代表預期報酬。`;
+    const arw = `<span class="arw">→</span>`;
+    $("#top-hint").innerHTML =
+      `${esc(d)} 收盤 · 入選 ${day.total} 檔取前 ${(day.rows||[]).length} 檔 · 同 Discord「🏆精選前${N}檔」`
+      + `<div class="rkbar"><b>排序依據</b>`
+      + `<span class="rkkey rk1"><span class="n">1</span>熱門股</span>${arw}`
+      + `<span class="rkkey rk2"><span class="n">2</span>族群發動</span>${arw}`
+      + `<span class="rkkey rk3"><span class="n">3</span>條件數</span>${arw}`
+      + `<span class="rkkey rk4"><span class="n">4</span>主力買超</span>`
+      + `<span class="arw">名次≠預期報酬</span></div>`;
     $("#c-top").textContent = (day.rows||[]).length;
     $("#top-list").innerHTML = list.length ? list.map(line).join("") : `<p class="hint">沒有符合的股票。</p>`;
   };
